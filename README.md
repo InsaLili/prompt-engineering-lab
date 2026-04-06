@@ -1,0 +1,91 @@
+# Prompt Engineering Lab
+
+## Exercise 01 — Roles & Prompt Control
+
+All three tests ask the model the same question: *"Write a debounce function."*
+The only difference is how much instruction is given upfront.
+
+| | No system prompt | System prompt | Pre-filled assistant turn |
+|---|---|---|---|
+| **Output** | Prose intro, full code block, section headers, closing explanation | Code only with brief inline comments, no prose | Bare code block, no explanation |
+| **Tone** | Tutorial-style, verbose | Professional, terse | Minimal |
+| **Completion tokens** | 376 | 77 | 51 |
+| **Total tokens** | 388 | 120 | 82 |
+
+### Key takeaways
+
+- **No system prompt** — The model defaults to a helpful-assistant persona: it defines the concept, shows code, and explains every line. Good for beginners; wasteful for production pipelines.
+- **System prompt** — Assigning a role ("senior JS engineer") and constraining the output format cuts completion tokens by ~80%. The code is equivalent in quality, just stripped of all ceremony.
+- **Pre-filled assistant turn** — Starting the assistant reply with ` ```js\n ` forces the model to continue a code block immediately, skipping any preamble it might still produce under a system prompt alone. This is the most token-efficient approach (51 completion tokens) and gives tightest control over output format.
+
+> **Rule of thumb:** add a role + constraint system prompt as a baseline; use assistant pre-filling when you need guaranteed output structure with zero prose overhead.
+
+---
+
+## Exercise 02 — Zero-shot, One-shot, Few-shot
+
+All three tests classify the same ambiguous review:
+*"The product arrived late and works ok, nothing remarkable."*
+
+| | Zero-shot | One-shot | Few-shot |
+|---|---|---|---|
+| **Examples given** | 0 | 1 (positive only) | 4 (positive, negative, neutral ×2) |
+| **Result (simple review)** | Neutral | neutral | neutral |
+| **Result (ambiguous review)** | Negative | negative | neutral |
+
+The second review variant — *"arrived late and works normal, nothing remarkable"* — is the interesting case. Its mixed signals (late delivery = bad, functional = ok) caused zero-shot and one-shot to tip negative, while few-shot correctly held neutral.
+
+### Key takeaways
+
+- **Zero-shot** — Works for clear-cut cases but drifts on ambiguous input. With no examples to anchor the label space, the model weighs negative signals (late delivery) more heavily than neutral ones.
+- **One-shot** — A single positive example establishes the format but doesn't help the model calibrate the boundary between negative and neutral. Result matches zero-shot on the hard case.
+- **Few-shot** — Four examples that explicitly cover the "mixed/mediocre" case anchor the neutral label correctly. The model follows the demonstrated pattern rather than relying on its priors.
+
+> **Rule of thumb:** zero-shot is fine for unambiguous tasks; add examples whenever the label boundaries are fuzzy or the output format needs to be strict. Cover edge cases in your examples — the model will generalise from what you show it.
+
+---
+
+## Exercise 03 — Chain-of-Thought (CoT)
+
+All three tests solve the same multi-step word problem:
+*3 shelves × 4 boxes × 6 items; 2 shelves full, 3rd half full. Total items?*
+The correct answer is **60**.
+
+| | Direct | Chain-of-Thought | Structured CoT |
+|---|---|---|---|
+| **Prompt instruction** | "Answer with just a number." | "Think step by step, then give the final number." | System prompt defines a strict `Step N: / Final answer:` format |
+| **Answer** | 54 (wrong) | 60 (correct) | 60 (correct) |
+| **Reasoning visible** | No | Yes — free-form numbered steps | Yes — compact, templated steps |
+
+The direct prompt got **54**, which is `(2 × 4 + 1) × 6` — the model counted the half-full shelf as 1 box instead of 2, a classic rushing error when no reasoning is shown.
+
+### Key takeaways
+
+- **Direct** — Asking for just the answer forces the model to collapse a multi-step calculation into one token prediction. It skips the intermediate accounting and makes an off-by-one error on the half-shelf.
+- **Chain-of-thought** — The phrase *"think step by step"* is enough to unlock correct reasoning. The model explicitly counts 8 + 2 = 10 boxes before multiplying by 6, arriving at 60.
+- **Structured CoT** — A system-prompt template constrains the reasoning into a fixed format (`Step 1 / Step 2 / Final answer`). Same accuracy as free CoT, but the output is predictable and easier to parse programmatically.
+
+> **Rule of thumb:** for any problem requiring more than one calculation, always elicit reasoning before the answer. Use free CoT for exploration; use structured CoT when the output feeds downstream code or needs to be audited.
+
+---
+
+## Exercise 04 — Structured JSON Output
+
+Four reviews are classified in parallel using a single system prompt that enforces a strict JSON schema. No markdown, no backticks — raw JSON only, parsed directly with `JSON.parse`.
+
+| Review | sentiment | confidence | key_emotion |
+|---|---|---|---|
+| "Absolutely love this product, arrived ahead of schedule!" | positive | 0.95 | joy |
+| "Terrible quality. Broke after two days." | negative | 0.95 | frustration |
+| "It's fine. Does what it says, nothing remarkable." | neutral | 0.75 | indifference |
+| "Late delivery but the item itself is great." | mixed | 0.85 | frustration |
+
+### Key takeaways
+
+- **Schema in the system prompt** — Declaring the exact field names, types, and allowed values (`"positive" | "negative" | "neutral" | "mixed"`) is what prevents the model from inventing fields or wrapping output in markdown code fences.
+- **`temperature: 0`** — Deterministic output matters for structured data. Higher temperatures increase the chance of malformed JSON or value drift across runs.
+- **`mixed` sentiment** — Because the schema explicitly listed `"mixed"` as an option, the model correctly applied it to the ambiguous review (bad delivery, good item) instead of forcing a binary call. The label space you define shapes the output you get.
+- **Defensive parsing** — Even with strict instructions, wrapping `JSON.parse` in a `try/catch` is essential; models can still emit invalid JSON under edge cases or token limits.
+- **Parallel execution** — Running all four requests with `Promise.all` cuts wall-clock time to the slowest single request rather than the sum of all four.
+
+> **Rule of thumb:** treat the model as an API by defining your schema upfront, setting temperature to 0, and always parsing defensively. The more explicit the schema, the more reliable the output.
