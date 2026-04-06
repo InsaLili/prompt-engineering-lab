@@ -89,3 +89,25 @@ Four reviews are classified in parallel using a single system prompt that enforc
 - **Parallel execution** — Running all four requests with `Promise.all` cuts wall-clock time to the slowest single request rather than the sum of all four.
 
 > **Rule of thumb:** treat the model as an API by defining your schema upfront, setting temperature to 0, and always parsing defensively. The more explicit the schema, the more reliable the output.
+
+---
+
+## Exercise 05 — Temperature
+
+The same prompt (*"Suggest a startup idea in one sentence."*) is run 3 times at four different temperatures to observe how randomness affects output diversity and stability.
+
+| Temperature | Behaviour | Example outputs |
+|---|---|---|
+| **0** | Near-identical across all 3 runs | All three produced the same "subscription platform connecting local artisans" idea, with only minor word-level variation |
+| **0.5** | Still very consistent; slight phrasing variation | Same artisan-platform concept dominates, small additions ("community-building events") |
+| **1.0** | Noticeably more diverse; different ideas start appearing | Mix of artisan platform and sustainable grocery/subscription box ideas |
+| **1.8** | Chaotic — one run produced garbled, multilingual token noise | Coherent ideas mixed with a completely broken output containing random Unicode and corrupted tokens |
+
+### Key takeaways
+
+- **Temperature 0** locks the model onto its highest-probability completion. Useful for deterministic tasks (JSON output, code, classification) but will give the same answer every time — no creative variation.
+- **Temperature 0.5** is a safe middle ground: output stays coherent and mostly consistent, with just enough variation for slightly different phrasings or angles.
+- **Temperature 1.0** is the default for most APIs. Diversity increases meaningfully — different ideas appear across runs — while output remains grammatically sound and sensible.
+- **Temperature 1.8** breaks the model. At least one run produced corrupted output: mixed languages, garbled tokens, and nonsense fragments. This is past the useful range for any production task.
+
+> **Rule of thumb:** use `0` for structured/deterministic output, `0.7–1.0` for creative or generative tasks, and never exceed `1.2` in production — higher values risk incoherent output without meaningful creative gain.
