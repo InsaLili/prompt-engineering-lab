@@ -111,3 +111,25 @@ The same prompt (*"Suggest a startup idea in one sentence."*) is run 3 times at 
 - **Temperature 1.8** breaks the model. At least one run produced corrupted output: mixed languages, garbled tokens, and nonsense fragments. This is past the useful range for any production task.
 
 > **Rule of thumb:** use `0` for structured/deterministic output, `0.7–1.0` for creative or generative tasks, and never exceed `1.2` in production — higher values risk incoherent output without meaningful creative gain.
+
+---
+
+## Exercise 06 — Top-p (Nucleus Sampling)
+
+The same prompt (*"Write the opening line of a thriller novel."*) is run at fixed `temperature: 1` with three different `top_p` values to isolate the effect of nucleus sampling on vocabulary range.
+
+| top_p | Token pool | Output |
+|---|---|---|
+| **0.1** | Top ~10% probability tokens only | "The rain fell in sheets, masking the sound of footsteps that crept closer, each heartbeat echoing like a warning in the darkness." |
+| **0.5** | Top ~50% probability tokens | "The rain pounded against the pavement like a thousand frantic hearts, drowning out the sound of footsteps that followed her into the darkness." |
+| **1.0** | All tokens (default) | "The rain hammered against the window like the frantic heartbeat of someone trapped inside a nightmare, each drop a countdown to the moment the truth would finally emerge from the shadows." |
+
+### Key takeaways
+
+- **top_p: 0.1** — Only the most probable tokens are eligible. Output is clean and competent but plays it safe: short sentence, familiar thriller imagery (rain, footsteps, darkness).
+- **top_p: 0.5** — A wider token pool introduces more expressive word choices ("pounded", "frantic hearts") while staying coherent. The sentence is richer without feeling forced.
+- **top_p: 1.0** — The full vocabulary is on the table. The model produces the most elaborate and layered sentence — extended metaphor, nested imagery, longer structure — but also the hardest to control at scale.
+- All three outputs share the same core motif (rain at night, someone being followed), which shows the underlying high-probability concept doesn't change — only the *expressiveness* of how it's rendered.
+- **top_p vs temperature** — Temperature scales the entire probability distribution (higher = flatter); top_p cuts off the tail after a cumulative probability threshold. They're complementary: temperature controls boldness, top_p controls vocabulary range.
+
+> **Rule of thumb:** leave `top_p` at `1.0` by default and tune temperature first. Reach for lower `top_p` (0.1–0.3) only when you want to suppress rare/unusual tokens — e.g. strict domain language or consistent brand voice. Don't adjust both temperature and top_p at the same time.
