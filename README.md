@@ -133,3 +133,23 @@ The same prompt (*"Write the opening line of a thriller novel."*) is run at fixe
 - **top_p vs temperature** — Temperature scales the entire probability distribution (higher = flatter); top_p cuts off the tail after a cumulative probability threshold. They're complementary: temperature controls boldness, top_p controls vocabulary range.
 
 > **Rule of thumb:** leave `top_p` at `1.0` by default and tune temperature first. Reach for lower `top_p` (0.1–0.3) only when you want to suppress rare/unusual tokens — e.g. strict domain language or consistent brand voice. Don't adjust both temperature and top_p at the same time.
+
+---
+
+## Exercise 07 — Max Tokens
+
+The same prompt (*"Explain how the internet works. explain in 3 bullet points"*) is run with two different `max_tokens` limits to observe how the budget affects completeness and the `finish_reason` signal.
+
+| | max_tokens: 50 | max_tokens: 500 |
+|---|---|---|
+| **finish_reason** | `length` | `stop` |
+| **Output** | Cut off mid-sentence inside a bullet point on data transmission | Three complete bullet points covering Data Transmission, Infrastructure, and DNS |
+
+### Key takeaways
+
+- **`finish_reason: "length"`** is the critical signal — the model hit the token budget before finishing. At 50 tokens it cuts off mid-sentence, mid-bullet, producing broken output that can silently corrupt downstream parsing.
+- **`finish_reason: "stop"`** means the model reached a natural end point — this is what you want. At 500 tokens the model delivered a concise, complete three-bullet summary and stopped cleanly.
+- The prompt explicitly asked for 3 bullet points, which kept the 500-token response concise enough to finish cleanly. This is the right pattern: **constrain scope in the prompt, use `max_tokens` as a safety cap** — not the other way around.
+- **Cost control vs completeness** — `max_tokens` is a cost and latency guard, not a formatting tool. Pair it with prompt-level scope guidance ("in 3 bullet points", "in one paragraph") so the model knows how much to write before it starts.
+
+> **Rule of thumb:** always log `finish_reason` in production. If you see `"length"`, either raise the budget or tighten the prompt scope. Never silently swallow a truncated response.
