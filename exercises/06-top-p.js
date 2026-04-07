@@ -1,4 +1,3 @@
-// exercises/thursday/02-top-p.js
 import { chat } from '../lib/llm.js';
 
 const prompt = [

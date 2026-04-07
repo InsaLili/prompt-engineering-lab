@@ -153,3 +153,29 @@ The same prompt (*"Explain how the internet works. explain in 3 bullet points"*)
 - **Cost control vs completeness** — `max_tokens` is a cost and latency guard, not a formatting tool. Pair it with prompt-level scope guidance ("in 3 bullet points", "in one paragraph") so the model knows how much to write before it starts.
 
 > **Rule of thumb:** always log `finish_reason` in production. If you see `"length"`, either raise the budget or tighten the prompt scope. Never silently swallow a truncated response.
+
+---
+
+## Exercise 08 — Presence & Frequency Penalties
+
+The same prompt (*"Write 5 tips for staying productive when working from home."*) is run at `temperature: 0.7` with penalties off vs both penalties at `0.6`.
+
+| | No penalty | With penalty (0.6 each) |
+|---|---|---|
+| **presence_penalty** | 0 | 0.6 — discourages revisiting topics already mentioned |
+| **frequency_penalty** | 0 | 0.6 — discourages reusing the same words |
+| **Tip 1** | "Establish a Dedicated Workspace" | "Create a Dedicated Workspace" |
+| **Tip 2** | "Set a Routine and Stick to It" | "Establish a Routine" |
+| **Tip 3** | "Use Time Management Techniques" | "Limit Distractions" |
+| **Tip 4** | "Limit Distractions" | "Use Time Management Techniques" |
+| **Tip 5** | "Stay Connected with Colleagues" | "Stay Connected with Colleagues" |
+
+### Key takeaways
+
+- **Minimal visible difference here** — both runs produced the same five topics in nearly the same order. For a well-defined list prompt like this, the model's strong prior on "good WFH tips" dominates; penalties don't override topic selection.
+- **`presence_penalty`** reduces the chance the model circles back to a concept it already covered. Most useful in long-form generation where the model might repeat an idea paragraphs later.
+- **`frequency_penalty`** reduces repetition of specific words and phrases. Useful when output feels lexically monotonous (e.g. every bullet starting with "Make sure to...").
+- **Penalties are subtle levers** — they nudge the token probability distribution, they don't rewrite the model's knowledge. For a short, structured task like a 5-item list, the effect is minimal. Their value becomes more apparent in longer, open-ended generation.
+- **Don't stack high values** — both penalties at 0.6 is already moderate. Pushing both to 1.0+ can produce awkward phrasing as the model avoids natural word reuse.
+
+> **Rule of thumb:** leave both penalties at 0 by default. Add `frequency_penalty: 0.3–0.5` if output feels repetitive in word choice; add `presence_penalty: 0.3–0.5` if the model keeps looping back to the same ideas in long outputs. Never set either above 1.0.

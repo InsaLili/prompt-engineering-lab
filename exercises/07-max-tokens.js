@@ -1,4 +1,3 @@
-// exercises/thursday/03-max-tokens.js
 import { chat } from '../lib/llm.js';
 
 const prompt = [

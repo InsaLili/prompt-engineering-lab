@@ -1,4 +1,3 @@
-// exercises/thursday/01-temperature.js
 import { chat } from '../lib/llm.js';
 
 const prompt = [
