@@ -2,13 +2,13 @@
 
 ## Parameter Cheat Sheet
 
-| Task | temperature | top_p | max_tokens | penalties |
-|---|---|---|---|---|
-| JSON extraction | 0 | default | tight | 0 |
-| Classification | 0 | default | ~20 | 0 |
-| Code generation | 0–0.3 | default | generous | 0 |
-| Chat assistant | 0.7 | default | generous | frequency: 0.3 |
-| Creative writing | 1.0–1.2 | 0.9 | generous | frequency: 0.6 |
+| Task | temperature | top_p | max_tokens | frequency_penalty | presence_penalty |
+|---|---|---|---|---|---|
+| JSON extraction | 0 | default | tight | 0 | 0 |
+| Classification | 0 | default | ~20 | 0 | 0 |
+| Code generation | 0–0.3 | default | generous | 0 | 0 |
+| Chat assistant | 0.7 | default | generous | 0.3 | 0 |
+| Creative writing | 1.0–1.2 | 0.9 | generous | 0.6 | 0.3 |
 
 ---
 
