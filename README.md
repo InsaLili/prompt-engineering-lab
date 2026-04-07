@@ -195,3 +195,32 @@ Rather than using the shared `chat()` helper, this exercise calls the OpenAI API
 - **Error handling** — partial JSON chunks are inevitable. The `try/catch` inside the loop is not optional; without it a split chunk crashes the parser and drops the rest of the stream.
 
 > **Rule of thumb:** use the `onToken` callback pattern for any user-facing interface — wire each token directly to a UI append event. Buffer the full text in parallel for persistence. Always handle partial chunk parse errors silently.
+
+---
+
+## Exercise 10 — Context Window & Conversation History
+
+A 5-turn conversation is built by appending every user and assistant message to a `history` array and resending the full array on every call. Token usage is logged after each turn.
+
+| Turn | User message | prompt_tokens | completion_tokens | total_tokens |
+|---|---|---|---|---|
+| 1 | "My name is Alex." | 12 | 14 | 26 |
+| 2 | "I'm building an AI-powered recipe app." | 42 | 55 | 97 |
+| 3 | "The app should suggest recipes based on ingredients the user has." | 117 | 500 | 617 |
+| 4 | "It should also track dietary restrictions." | 632 | 500 | 1132 |
+| 5 | "What name should I call it?" | 1147 | 374 | 1521 |
+| Memory test | "What's my name and what am I building?" | ~1568 | — | 1568 |
+
+**Memory test result:** the model correctly recalled both Alex's name and the app description from turn 1 — because the full history was still in the prompt.
+
+### Key takeaways
+
+- **`prompt_tokens` grows with every turn** — because the entire conversation history is resent each time. Turn 1 costs 12 prompt tokens; by turn 5 it's 1,147. This is the core mechanic behind context window limits.
+- **The model only "remembers" what's in the prompt** — there is no persistent memory between API calls. Memory works here solely because the history array is passed in full. Remove it and the model forgets everything.
+- **Truncated responses (turns 3 & 4)** — both hit the default `max_tokens` cap of 500 and returned `⚠️ Response was truncated`. The verbose replies inflated the history, accelerating prompt token growth in subsequent turns.
+- **Context window exhaustion** — at scale, prompt tokens will eventually hit the model's limit (128k for gpt-4o-mini). Strategies to manage this:
+  - **Summarisation** — replace old turns with a compressed summary
+  - **Sliding window** — drop the oldest turns once a threshold is reached
+  - **Retrieval** — store history externally and fetch only relevant turns
+
+> **Rule of thumb:** log `prompt_tokens` per turn in production. If you see it growing unboundedly, implement a summarisation or sliding-window strategy before you hit the context limit — not after.
