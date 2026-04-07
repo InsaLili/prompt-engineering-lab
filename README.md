@@ -1,5 +1,17 @@
 # Prompt Engineering Lab
 
+## Parameter Cheat Sheet
+
+| Task | temperature | top_p | max_tokens | penalties |
+|---|---|---|---|---|
+| JSON extraction | 0 | default | tight | 0 |
+| Classification | 0 | default | ~20 | 0 |
+| Code generation | 0–0.3 | default | generous | 0 |
+| Chat assistant | 0.7 | default | generous | frequency: 0.3 |
+| Creative writing | 1.0–1.2 | 0.9 | generous | frequency: 0.6 |
+
+---
+
 ## Exercise 01 — Roles & Prompt Control
 
 All three tests ask the model the same question: _"Write a debounce function."_
