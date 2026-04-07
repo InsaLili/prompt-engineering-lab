@@ -2,15 +2,15 @@
 
 ## Exercise 01 — Roles & Prompt Control
 
-All three tests ask the model the same question: *"Write a debounce function."*
+All three tests ask the model the same question: _"Write a debounce function."_
 The only difference is how much instruction is given upfront.
 
-| | No system prompt | System prompt | Pre-filled assistant turn |
-|---|---|---|---|
-| **Output** | Prose intro, full code block, section headers, closing explanation | Code only with brief inline comments, no prose | Bare code block, no explanation |
-| **Tone** | Tutorial-style, verbose | Professional, terse | Minimal |
-| **Completion tokens** | 376 | 77 | 51 |
-| **Total tokens** | 388 | 120 | 82 |
+|                       | No system prompt                                                   | System prompt                                  | Pre-filled assistant turn       |
+| --------------------- | ------------------------------------------------------------------ | ---------------------------------------------- | ------------------------------- |
+| **Output**            | Prose intro, full code block, section headers, closing explanation | Code only with brief inline comments, no prose | Bare code block, no explanation |
+| **Tone**              | Tutorial-style, verbose                                            | Professional, terse                            | Minimal                         |
+| **Completion tokens** | 376                                                                | 77                                             | 51                              |
+| **Total tokens**      | 388                                                                | 120                                            | 82                              |
 
 ### Key takeaways
 
@@ -25,15 +25,15 @@ The only difference is how much instruction is given upfront.
 ## Exercise 02 — Zero-shot, One-shot, Few-shot
 
 All three tests classify the same ambiguous review:
-*"The product arrived late and works ok, nothing remarkable."*
+_"The product arrived late and works ok, nothing remarkable."_
 
-| | Zero-shot | One-shot | Few-shot |
-|---|---|---|---|
-| **Examples given** | 0 | 1 (positive only) | 4 (positive, negative, neutral ×2) |
-| **Result (simple review)** | Neutral | neutral | neutral |
-| **Result (ambiguous review)** | Negative | negative | neutral |
+|                               | Zero-shot | One-shot          | Few-shot                           |
+| ----------------------------- | --------- | ----------------- | ---------------------------------- |
+| **Examples given**            | 0         | 1 (positive only) | 4 (positive, negative, neutral ×2) |
+| **Result (simple review)**    | Neutral   | neutral           | neutral                            |
+| **Result (ambiguous review)** | Negative  | negative          | neutral                            |
 
-The second review variant — *"arrived late and works normal, nothing remarkable"* — is the interesting case. Its mixed signals (late delivery = bad, functional = ok) caused zero-shot and one-shot to tip negative, while few-shot correctly held neutral.
+The second review variant — _"arrived late and works normal, nothing remarkable"_ — is the interesting case. Its mixed signals (late delivery = bad, functional = ok) caused zero-shot and one-shot to tip negative, while few-shot correctly held neutral.
 
 ### Key takeaways
 
@@ -48,21 +48,21 @@ The second review variant — *"arrived late and works normal, nothing remarkabl
 ## Exercise 03 — Chain-of-Thought (CoT)
 
 All three tests solve the same multi-step word problem:
-*3 shelves × 4 boxes × 6 items; 2 shelves full, 3rd half full. Total items?*
+_3 shelves × 4 boxes × 6 items; 2 shelves full, 3rd half full. Total items?_
 The correct answer is **60**.
 
-| | Direct | Chain-of-Thought | Structured CoT |
-|---|---|---|---|
+|                        | Direct                       | Chain-of-Thought                                  | Structured CoT                                                  |
+| ---------------------- | ---------------------------- | ------------------------------------------------- | --------------------------------------------------------------- |
 | **Prompt instruction** | "Answer with just a number." | "Think step by step, then give the final number." | System prompt defines a strict `Step N: / Final answer:` format |
-| **Answer** | 54 (wrong) | 60 (correct) | 60 (correct) |
-| **Reasoning visible** | No | Yes — free-form numbered steps | Yes — compact, templated steps |
+| **Answer**             | 54 (wrong)                   | 60 (correct)                                      | 60 (correct)                                                    |
+| **Reasoning visible**  | No                           | Yes — free-form numbered steps                    | Yes — compact, templated steps                                  |
 
 The direct prompt got **54**, which is `(2 × 4 + 1) × 6` — the model counted the half-full shelf as 1 box instead of 2, a classic rushing error when no reasoning is shown.
 
 ### Key takeaways
 
 - **Direct** — Asking for just the answer forces the model to collapse a multi-step calculation into one token prediction. It skips the intermediate accounting and makes an off-by-one error on the half-shelf.
-- **Chain-of-thought** — The phrase *"think step by step"* is enough to unlock correct reasoning. The model explicitly counts 8 + 2 = 10 boxes before multiplying by 6, arriving at 60.
+- **Chain-of-thought** — The phrase _"think step by step"_ is enough to unlock correct reasoning. The model explicitly counts 8 + 2 = 10 boxes before multiplying by 6, arriving at 60.
 - **Structured CoT** — A system-prompt template constrains the reasoning into a fixed format (`Step 1 / Step 2 / Final answer`). Same accuracy as free CoT, but the output is predictable and easier to parse programmatically.
 
 > **Rule of thumb:** for any problem requiring more than one calculation, always elicit reasoning before the answer. Use free CoT for exploration; use structured CoT when the output feeds downstream code or needs to be audited.
@@ -73,12 +73,12 @@ The direct prompt got **54**, which is `(2 × 4 + 1) × 6` — the model counted
 
 Four reviews are classified in parallel using a single system prompt that enforces a strict JSON schema. No markdown, no backticks — raw JSON only, parsed directly with `JSON.parse`.
 
-| Review | sentiment | confidence | key_emotion |
-|---|---|---|---|
-| "Absolutely love this product, arrived ahead of schedule!" | positive | 0.95 | joy |
-| "Terrible quality. Broke after two days." | negative | 0.95 | frustration |
-| "It's fine. Does what it says, nothing remarkable." | neutral | 0.75 | indifference |
-| "Late delivery but the item itself is great." | mixed | 0.85 | frustration |
+| Review                                                     | sentiment | confidence | key_emotion  |
+| ---------------------------------------------------------- | --------- | ---------- | ------------ |
+| "Absolutely love this product, arrived ahead of schedule!" | positive  | 0.95       | joy          |
+| "Terrible quality. Broke after two days."                  | negative  | 0.95       | frustration  |
+| "It's fine. Does what it says, nothing remarkable."        | neutral   | 0.75       | indifference |
+| "Late delivery but the item itself is great."              | mixed     | 0.85       | frustration  |
 
 ### Key takeaways
 
@@ -94,14 +94,14 @@ Four reviews are classified in parallel using a single system prompt that enforc
 
 ## Exercise 05 — Temperature
 
-The same prompt (*"Suggest a startup idea in one sentence."*) is run 3 times at four different temperatures to observe how randomness affects output diversity and stability.
+The same prompt (_"Suggest a startup idea in one sentence."_) is run 3 times at four different temperatures to observe how randomness affects output diversity and stability.
 
-| Temperature | Behaviour | Example outputs |
-|---|---|---|
-| **0** | Near-identical across all 3 runs | All three produced the same "subscription platform connecting local artisans" idea, with only minor word-level variation |
-| **0.5** | Still very consistent; slight phrasing variation | Same artisan-platform concept dominates, small additions ("community-building events") |
-| **1.0** | Noticeably more diverse; different ideas start appearing | Mix of artisan platform and sustainable grocery/subscription box ideas |
-| **1.8** | Chaotic — one run produced garbled, multilingual token noise | Coherent ideas mixed with a completely broken output containing random Unicode and corrupted tokens |
+| Temperature | Behaviour                                                    | Example outputs                                                                                                          |
+| ----------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| **0**       | Near-identical across all 3 runs                             | All three produced the same "subscription platform connecting local artisans" idea, with only minor word-level variation |
+| **0.5**     | Still very consistent; slight phrasing variation             | Same artisan-platform concept dominates, small additions ("community-building events")                                   |
+| **1.0**     | Noticeably more diverse; different ideas start appearing     | Mix of artisan platform and sustainable grocery/subscription box ideas                                                   |
+| **1.8**     | Chaotic — one run produced garbled, multilingual token noise | Coherent ideas mixed with a completely broken output containing random Unicode and corrupted tokens                      |
 
 ### Key takeaways
 
@@ -116,20 +116,20 @@ The same prompt (*"Suggest a startup idea in one sentence."*) is run 3 times at 
 
 ## Exercise 06 — Top-p (Nucleus Sampling)
 
-The same prompt (*"Write the opening line of a thriller novel."*) is run at fixed `temperature: 1` with three different `top_p` values to isolate the effect of nucleus sampling on vocabulary range.
+The same prompt (_"Write the opening line of a thriller novel."_) is run at fixed `temperature: 1` with three different `top_p` values to isolate the effect of nucleus sampling on vocabulary range.
 
-| top_p | Token pool | Output |
-|---|---|---|
-| **0.1** | Top ~10% probability tokens only | "The rain fell in sheets, masking the sound of footsteps that crept closer, each heartbeat echoing like a warning in the darkness." |
-| **0.5** | Top ~50% probability tokens | "The rain pounded against the pavement like a thousand frantic hearts, drowning out the sound of footsteps that followed her into the darkness." |
-| **1.0** | All tokens (default) | "The rain hammered against the window like the frantic heartbeat of someone trapped inside a nightmare, each drop a countdown to the moment the truth would finally emerge from the shadows." |
+| top_p   | Token pool                       | Output                                                                                                                                                                                        |
+| ------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0.1** | Top ~10% probability tokens only | "The rain fell in sheets, masking the sound of footsteps that crept closer, each heartbeat echoing like a warning in the darkness."                                                           |
+| **0.5** | Top ~50% probability tokens      | "The rain pounded against the pavement like a thousand frantic hearts, drowning out the sound of footsteps that followed her into the darkness."                                              |
+| **1.0** | All tokens (default)             | "The rain hammered against the window like the frantic heartbeat of someone trapped inside a nightmare, each drop a countdown to the moment the truth would finally emerge from the shadows." |
 
 ### Key takeaways
 
 - **top_p: 0.1** — Only the most probable tokens are eligible. Output is clean and competent but plays it safe: short sentence, familiar thriller imagery (rain, footsteps, darkness).
 - **top_p: 0.5** — A wider token pool introduces more expressive word choices ("pounded", "frantic hearts") while staying coherent. The sentence is richer without feeling forced.
 - **top_p: 1.0** — The full vocabulary is on the table. The model produces the most elaborate and layered sentence — extended metaphor, nested imagery, longer structure — but also the hardest to control at scale.
-- All three outputs share the same core motif (rain at night, someone being followed), which shows the underlying high-probability concept doesn't change — only the *expressiveness* of how it's rendered.
+- All three outputs share the same core motif (rain at night, someone being followed), which shows the underlying high-probability concept doesn't change — only the _expressiveness_ of how it's rendered.
 - **top_p vs temperature** — Temperature scales the entire probability distribution (higher = flatter); top_p cuts off the tail after a cumulative probability threshold. They're complementary: temperature controls boldness, top_p controls vocabulary range.
 
 > **Rule of thumb:** leave `top_p` at `1.0` by default and tune temperature first. Reach for lower `top_p` (0.1–0.3) only when you want to suppress rare/unusual tokens — e.g. strict domain language or consistent brand voice. Don't adjust both temperature and top_p at the same time.
@@ -138,12 +138,12 @@ The same prompt (*"Write the opening line of a thriller novel."*) is run at fixe
 
 ## Exercise 07 — Max Tokens
 
-The same prompt (*"Explain how the internet works. explain in 3 bullet points"*) is run with two different `max_tokens` limits to observe how the budget affects completeness and the `finish_reason` signal.
+The same prompt (_"Explain how the internet works. explain in 3 bullet points"_) is run with two different `max_tokens` limits to observe how the budget affects completeness and the `finish_reason` signal.
 
-| | max_tokens: 50 | max_tokens: 500 |
-|---|---|---|
-| **finish_reason** | `length` | `stop` |
-| **Output** | Cut off mid-sentence inside a bullet point on data transmission | Three complete bullet points covering Data Transmission, Infrastructure, and DNS |
+|                   | max_tokens: 50                                                  | max_tokens: 500                                                                  |
+| ----------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **finish_reason** | `length`                                                        | `stop`                                                                           |
+| **Output**        | Cut off mid-sentence inside a bullet point on data transmission | Three complete bullet points covering Data Transmission, Infrastructure, and DNS |
 
 ### Key takeaways
 
@@ -158,17 +158,17 @@ The same prompt (*"Explain how the internet works. explain in 3 bullet points"*)
 
 ## Exercise 08 — Presence & Frequency Penalties
 
-The same prompt (*"Write 5 tips for staying productive when working from home."*) is run at `temperature: 0.7` with penalties off vs both penalties at `0.6`.
+The same prompt (_"Write 5 tips for staying productive when working from home."_) is run at `temperature: 0.7` with penalties off vs both penalties at `0.6`.
 
-| | No penalty | With penalty (0.6 each) |
-|---|---|---|
-| **presence_penalty** | 0 | 0.6 — discourages revisiting topics already mentioned |
-| **frequency_penalty** | 0 | 0.6 — discourages reusing the same words |
-| **Tip 1** | "Establish a Dedicated Workspace" | "Create a Dedicated Workspace" |
-| **Tip 2** | "Set a Routine and Stick to It" | "Establish a Routine" |
-| **Tip 3** | "Use Time Management Techniques" | "Limit Distractions" |
-| **Tip 4** | "Limit Distractions" | "Use Time Management Techniques" |
-| **Tip 5** | "Stay Connected with Colleagues" | "Stay Connected with Colleagues" |
+|                       | No penalty                        | With penalty (0.6 each)                               |
+| --------------------- | --------------------------------- | ----------------------------------------------------- |
+| **presence_penalty**  | 0                                 | 0.6 — discourages revisiting topics already mentioned |
+| **frequency_penalty** | 0                                 | 0.6 — discourages reusing the same words              |
+| **Tip 1**             | "Establish a Dedicated Workspace" | "Create a Dedicated Workspace"                        |
+| **Tip 2**             | "Set a Routine and Stick to It"   | "Establish a Routine"                                 |
+| **Tip 3**             | "Use Time Management Techniques"  | "Limit Distractions"                                  |
+| **Tip 4**             | "Limit Distractions"              | "Use Time Management Techniques"                      |
+| **Tip 5**             | "Stay Connected with Colleagues"  | "Stay Connected with Colleagues"                      |
 
 ### Key takeaways
 
@@ -179,3 +179,19 @@ The same prompt (*"Write 5 tips for staying productive when working from home."*
 - **Don't stack high values** — both penalties at 0.6 is already moderate. Pushing both to 1.0+ can produce awkward phrasing as the model avoids natural word reuse.
 
 > **Rule of thumb:** leave both penalties at 0 by default. Add `frequency_penalty: 0.3–0.5` if output feels repetitive in word choice; add `presence_penalty: 0.3–0.5` if the model keeps looping back to the same ideas in long outputs. Never set either above 1.0.
+
+---
+
+## Exercise 09 — Streaming
+
+Rather than using the shared `chat()` helper, this exercise calls the OpenAI API directly with `stream: true` and processes the raw Server-Sent Events (SSE) stream using the Fetch API.
+
+### Key takeaways
+
+- **`onToken` is the real-world chat UI pattern** — each token fires a callback that appends to the display. In a browser this maps directly to appending a text node or updating a React state; `process.stdout.write(token)` is the terminal equivalent. This is the exact pattern to use when building a chat interface.
+- **Perceived latency** — streaming makes responses feel instant; the first token renders in milliseconds rather than waiting for the full completion. Critical for chat UIs and long outputs.
+- **Tokens ≠ characters ≠ words** — the result shows numbers fusing (`78`, `910`, `171819`) because multiple tokens arrived in the same SSE chunk. `onToken` fires per chunk delivery, not strictly per model token.
+- **`fullText` accumulation** — streaming doesn't prevent you from having the complete response; you build it incrementally and return it at the end for storage or further processing.
+- **Error handling** — partial JSON chunks are inevitable. The `try/catch` inside the loop is not optional; without it a split chunk crashes the parser and drops the rest of the stream.
+
+> **Rule of thumb:** use the `onToken` callback pattern for any user-facing interface — wire each token directly to a UI append event. Buffer the full text in parallel for persistence. Always handle partial chunk parse errors silently.
