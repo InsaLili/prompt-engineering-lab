@@ -315,3 +315,37 @@ $$;
 - **Supabase replaces in-memory store** — data survives process restarts, scales to large document sets
 - **pgvector does the heavy lifting** — cosine similarity computed in SQL, no JS math needed
 - **Score threshold matters** — scores below ~0.4 reliably indicate the document doesn't contain the answer
+
+---
+
+## Exercise 09 — Interactive Chat CLI
+
+Wraps the persistent RAG pipeline in a full terminal chat interface using Node's `readline` module, adding conversation memory and interactive commands.
+
+### How it works
+
+```
+User input (readline)
+  → command check ('exit', 'clear', 'sources')
+  → rag.query(input, { k: 3, history: last 10 turns })
+  → print answer + source count + token usage
+  → append turn to history[]
+```
+
+### Commands
+
+| Command | Effect |
+|---------|--------|
+| `exit` | Quit |
+| `clear` | Reset conversation history |
+| `sources` | Show full text of chunks retrieved in the last query |
+
+### Key takeaways
+
+- **Conversation history accumulates** — each turn is appended to a `history` array and passed to `rag.query`. The model can reference earlier turns ("What did I just ask about?") because they're in the prompt.
+- **Sliding window caps context growth** — only the last 10 turns are passed (`history.slice(-MAX_HISTORY)`), preventing unbounded prompt token growth as the session continues.
+- **`sources` command** — lets you inspect exactly which chunks were retrieved and at what similarity score. Essential for debugging why an answer is wrong or incomplete.
+- **`rl.setPrompt` + `rl.prompt()`** — the readline pattern for async interactive CLIs: pause after input, await the async handler, then re-prompt. Keeps the UI responsive without blocking the event loop.
+- **Terminal colour codes** — ANSI escape sequences (`\x1b[32m` etc.) differentiate roles visually at no cost. The `c` object keeps them readable and centralised.
+
+> **Rule of thumb:** for a production chat CLI, combine a sliding-window history (to cap tokens) with a `sources` command (to make retrieval transparent). Both are cheap to add and make the system dramatically easier to debug and trust.

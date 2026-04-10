@@ -41,6 +41,7 @@ Covers semantic search, vector databases, and building a production-grade RAG pi
 | 06 | Hallucination | Raw LLM confidently fabricates; RAG-grounded model correctly refuses out-of-scope questions |
 | 07 | Persistent Ingest | Embed once, store in Supabase — idempotency guard prevents re-embedding costs |
 | 08 | Persistent RAG Query | Query Supabase with pgvector; only 2 OpenAI API calls per question (embed + chat) |
+| 09 | Interactive Chat CLI | `readline` loop + sliding-window history + `sources` command for transparent retrieval |
 
 ### RAG system overview
 
