@@ -104,22 +104,37 @@ rl.on('line', async input => {
     return;
   }
 
-  // --- RAG query ---
-  process.stdout.write(`\n${c.gray}Thinking...${c.reset}`);
+  // Rough token estimate: 1 token ≈ 4 characters
+  const historyTokenEstimate = history
+    .slice(-MAX_HISTORY)
+    .reduce((sum, turn) => sum + Math.round(turn.content.length / 4), 0);
+
+  if (historyTokenEstimate > 3000) {
+    print(
+      'system',
+      `Warning: conversation history is large (~${historyTokenEstimate} tokens). Consider typing 'clear' to reset.`,
+    );
+  }
+
+  // Replace the "--- RAG query ---" block with this:
+
+  // --- RAG query (streaming) ---
+  process.stdout.write(`\n${c.green}${c.bold}Assistant${c.reset} `);
 
   try {
-    const result = await rag.query(userInput, {
-      k: 3,
-      history: history.slice(-MAX_HISTORY), // pass recent history only
-    });
+    let fullAnswer = '';
 
-    // Clear "Thinking..." line
-    process.stdout.write('\r' + ' '.repeat(20) + '\r');
+    const result = await rag.queryStream(
+      userInput,
+      { k: 3, history: history.slice(-MAX_HISTORY) },
+      token => {
+        process.stdout.write(token); // print each token as it arrives
+        fullAnswer += token;
+      },
+    );
 
-    // Print answer
-    print('assistant', result.answer);
+    console.log('\n');
 
-    // Show source count quietly
     if (result.sources.length > 0) {
       print(
         'sources',
@@ -127,21 +142,11 @@ rl.on('line', async input => {
       );
     }
 
-    // Show token usage
-    if (result.tokensUsed) {
-      print(
-        'sources',
-        `  Tokens: ${result.tokensUsed.total_tokens} used this turn`,
-      );
-    }
-
-    // Store turn in history
     history.push({ role: 'user', content: userInput });
-    history.push({ role: 'assistant', content: result.answer });
+    history.push({ role: 'assistant', content: fullAnswer });
 
     lastSources = result.sources;
   } catch (err) {
-    process.stdout.write('\r' + ' '.repeat(20) + '\r');
     console.log(`\n${c.yellow}Error: ${err.message}${c.reset}\n`);
   }
 

@@ -318,18 +318,20 @@ $$;
 
 ---
 
-## Exercise 09 — Interactive Chat CLI
+## Exercise 09 — Interactive Chat CLI (with Streaming)
 
-Wraps the persistent RAG pipeline in a full terminal chat interface using Node's `readline` module, adding conversation memory and interactive commands.
+Wraps the persistent RAG pipeline in a full terminal chat interface using Node's `readline` module, adding streaming output, conversation memory, and interactive commands.
 
 ### How it works
 
 ```
 User input (readline)
   → command check ('exit', 'clear', 'sources')
-  → rag.query(input, { k: 3, history: last 10 turns })
-  → print answer + source count + token usage
-  → append turn to history[]
+  → history token estimate → warn if > 3000 tokens
+  → rag.queryStream(input, { k: 3, history: last 10 turns }, onToken)
+      → embed question → pgvector search → build prompt
+      → stream Chat API response → onToken fires per chunk
+  → accumulate fullAnswer → append turn to history[]
 ```
 
 ### Commands
@@ -340,12 +342,33 @@ User input (readline)
 | `clear` | Reset conversation history |
 | `sources` | Show full text of chunks retrieved in the last query |
 
+### End-to-end flow
+
+```
+OpenAI API
+  │  stream: true → sends SSE chunks as tokens are generated
+  ▼
+response.body.getReader()
+  │  .read() → raw bytes, one network chunk at a time
+  ▼
+TextDecoder.decode()
+  │  bytes → string, may contain 1..N SSE lines
+  ▼
+split('\n') → filter 'data: ' lines → JSON.parse each
+  │  extract delta.content (the token string)
+  ▼
+onToken(token)
+  ├─ process.stdout.write(token)   → visible immediately in terminal
+  └─ fullAnswer += token           → stored for history after stream ends
+```
+
 ### Key takeaways
 
-- **Conversation history accumulates** — each turn is appended to a `history` array and passed to `rag.query`. The model can reference earlier turns ("What did I just ask about?") because they're in the prompt.
-- **Sliding window caps context growth** — only the last 10 turns are passed (`history.slice(-MAX_HISTORY)`), preventing unbounded prompt token growth as the session continues.
+- **`rag.queryStream` instead of `rag.query`** — the pipeline now streams the Chat API response. The `onToken` callback writes each token to stdout immediately (`process.stdout.write(token)`), so the answer appears word by word instead of all at once after a delay.
+- **`fullAnswer` accumulation** — streaming doesn't prevent storing the complete response. Tokens are concatenated into `fullAnswer` inside the callback and pushed to `history` after the stream ends — same data, better perceived latency.
+- **Partial chunk safety** — one `reader.read()` may span multiple SSE lines or split one line across two reads. The `try/catch` around `JSON.parse` silently discards incomplete lines; the next read completes them.
+- **History token estimate** — a rough heuristic (`chars / 4`) warns when accumulated history exceeds ~3000 tokens, prompting the user to `clear` before hitting the context limit. Cheap to compute, avoids silent failures.
+- **Sliding window caps context growth** — only the last 10 turns are passed (`history.slice(-MAX_HISTORY)`), preventing unbounded prompt token growth across a long session.
 - **`sources` command** — lets you inspect exactly which chunks were retrieved and at what similarity score. Essential for debugging why an answer is wrong or incomplete.
-- **`rl.setPrompt` + `rl.prompt()`** — the readline pattern for async interactive CLIs: pause after input, await the async handler, then re-prompt. Keeps the UI responsive without blocking the event loop.
-- **Terminal colour codes** — ANSI escape sequences (`\x1b[32m` etc.) differentiate roles visually at no cost. The `c` object keeps them readable and centralised.
 
-> **Rule of thumb:** for a production chat CLI, combine a sliding-window history (to cap tokens) with a `sources` command (to make retrieval transparent). Both are cheap to add and make the system dramatically easier to debug and trust.
+> **Rule of thumb:** stream any response the user waits on — it costs nothing extra and makes the UI feel instant. Accumulate the full text in parallel for history and persistence.
