@@ -2,6 +2,22 @@
 
 ---
 
+## API Reference
+
+| | `/v1/embeddings` | `/v1/chat/completions` |
+|---|---|---|
+| Purpose | Encode meaning into a vector | Generate text |
+| Model | `text-embedding-3-small` | `gpt-4o-mini` |
+| Input | `{ input: "string" }` | `{ messages: [...] }` |
+| Output | `float[]` (1536 numbers) | text string |
+| Parameters | almost none | `temperature`, `top_p`, `max_tokens`, etc. |
+| Model family | encoder-only (BERT-style) | decoder-based (GPT-style) |
+| Used for | vector search, similarity | answering, summarising, reasoning |
+
+These are different model architectures trained for different tasks — not the same model with a different mode. Every RAG query uses both: `/v1/embeddings` to encode the question, `/v1/chat/completions` to generate the answer.
+
+---
+
 ## Exercise 01 — Inspect Embeddings
 
 Calls the OpenAI Embedding API directly to understand what an embedding actually is.
